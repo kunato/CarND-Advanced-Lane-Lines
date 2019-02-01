@@ -65,7 +65,7 @@ Then, I appied camera calibration matrix and distortion coefficients using `cv2.
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I combine s channel color in HGS color space with threshold = (170, 255) and x axis sobel operator with threshold = (20, 100). If any color is in the thresold are filled with 1 otherwise 0. The code of the algorithm is in `processing.py` file lines 95-116 which is `get_road_pixel()` function. The result of this function is in the bottom.
+I combine s channel color in HGS color space with threshold = (170, 255) and x axis sobel operator with threshold = (20, 100). If any color is in the thresold are filled with 1 otherwise 0. The code of the algorithm is in `processing.py` file (lines 97-118) which is `get_road_pixel()` function. The result of this function is in the bottom.
 
 ![alt text][image7]
 
@@ -82,7 +82,7 @@ The code for perspective transform is in the function `wrap()` in the `warper.py
 
 I detect the lanes by using 2 techniques. 
 First, It is used on the first frame. It is a `get_lane_poly_ff()` function in `processing.py` file.
-`get_lane_poly_ff()` first get the histogram of bottom half of the wrapped image to get the starting points. Then, I use sliding windows by get all nonzero pixel in the window (lines 28-43) to fit the polynomial in the `polyfit()` function (lines 47-59).
+`get_lane_poly_ff()` first get the histogram of bottom half of the wrapped image to get the starting points. Then, I use sliding windows by get all nonzero pixel in the window (lines 29-44) to fit the polynomial in the `polyfit()` function (lines 48-60).
 
 Second, It is used on second frame and after. It is a `get_lane_around_poly()` function in `processing.py` file. It use prior fitted lines as a start points for doing a window searching. 
 
@@ -94,9 +94,9 @@ Second, It is used on second frame and after. It is a `get_lane_around_poly()` f
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I calculate radius of curvature in a `get_lane_curvature()` function (lines 71-74) which get lane curvature for each lane line seperatly. Then, I average the radius of each lane (lines 140).
+I calculate radius of curvature in a `get_lane_curvature()` function (lines 73-76) which get lane curvature for each lane line seperatly. Then, I average the radius of each lane (lines 142).
 
-The position of the vehicle is calculated by get x position of the lanes in `get_lane_position_x()` function (lines 76-78) then calculate number of pixel the center of this lanes is difference from center of the image. (lines 139-140)
+The position of the vehicle is calculated by get x position of the lanes in `get_lane_position_x()` function (lines 78-80) then calculate number of pixel the center of this lanes is difference from center of the image. (lines 141-142)
 
 
 
@@ -105,7 +105,7 @@ The position of the vehicle is calculated by get x position of the lanes in `get
 I implemented the algorithm to plot lane area back by 
 1. In the `get_lanes_area()` function. It input a blank image with a same size as camera img. Then, I use `line_pts = np.hstack((left_lane_line, right_lane_line))` to fill the area between lane lines and use `cv2.fillPoly()` to fill lane area into the blank input. 
 2. I unwrap persective the filled image back to the raw camera input perspective using `warpper.unwrap()`
-3. I use `weighted_img()` in `utils.py` to add raw_img (line 164) `processing.py` and img (line 172) together.
+3. I use `weighted_img()` in `utils.py` to add raw_img (line 166) `processing.py` and img (line 175) together.
 The result is as below.
 
 ![alt text][image11]

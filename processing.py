@@ -19,8 +19,9 @@ class Lane:
         # Set minimum number of pixels found to recenter window
         self.minpix = 50
         self.is_left = is_left
-        self.ym_per_pix = 30/720 # meters per pixel in y dimension
-
+        self.ym_per_pix = 30.0/720 # meters per pixel in y dimension
+        self.xm_per_pix = 3.7/700 # meters per pixel in x dimension
+    
     def get_lane_poly_ff(self):
         histogram = np.sum(self._img[self.img_height//2:,:], axis=0)
         base = np.argmax(histogram[:self.midpoint]) if self.is_left else np.argmax(histogram[self.midpoint:]) + self.midpoint
@@ -44,33 +45,34 @@ class Lane:
 
         self.fit, _ , _  = self.polyfit(nonzero, lane_inds)
 
-    def polyfit(self, nonzero, lane_inds):
+    def polyfit(self, nonzero, lane_inds, is_meters=False):
         x = nonzero[1][lane_inds]
         y = nonzero[0][lane_inds]
-        fit = np.polyfit(y, x, 2)
+        fit = np.polyfit(y, x, 2) if not is_meters else np.polyfit(y * self.ym_per_pix, x * self.xm_per_pix, 2)
         ploty = np.linspace(0, self._img.shape[0]-1, self._img.shape[0])
         fitx = None
         try:
-            fitx = fit[0]*ploty**2 + fit[1]*ploty + fit[2]
+            fitx = fit[0] * ploty ** 2 + fit[1] * ploty + fit[2]
         except TypeError:
             # Avoids an error if `left` and `right_fit` are still none or incorrect
             print('The function failed to fit a line!')
-            fitx = 1*ploty**2 + 1*ploty
+            fitx = 1 * ploty ** 2 + 1 * ploty
         return fit, fitx, ploty
     
     
     def get_lane_around_poly(self, img, flip=False):
         nonzero = img.nonzero()
-        lane_inds = ((nonzero[1] > (self.fit[0]*(nonzero[0]**2) + self.fit[1]*nonzero[0] + 
+        lane_inds = ((nonzero[1] > (self.fit[0] * (nonzero[0] ** 2) + self.fit[1] * nonzero[0] + 
                 self.fit[2] - self.margin)) & (nonzero[1] < (self.fit[0]*(nonzero[0]**2) + 
-                self.fit[1]*nonzero[0] + self.fit[2] + self.margin)))
+                self.fit[1] * nonzero[0] + self.fit[2] + self.margin)))
         
         self.fit, self.fitx, self.ploty = self.polyfit(nonzero, lane_inds)
+        self.fit_meters, _, _ = self.polyfit(nonzero, lane_inds, is_meters=True)
         return np.array([np.flipud(np.transpose(np.vstack([self.fitx, self.ploty])))]) if flip else np.array([np.transpose(np.vstack([self.fitx, self.ploty]))])
 
     def get_lane_curvature(self):
         y_eval = np.max(self.ploty)
-        curverad = ((1 + (2*self.fit[0]*y_eval*self.ym_per_pix + self.fit[1])**2)**1.5) / np.absolute(2*self.fit[0])
+        curverad = ((1 + (2 * self.fit_meters[0] * y_eval * self.ym_per_pix + self.fit_meters[1]) ** 2) ** 1.5) / np.absolute(2 * self.fit_meters[0])
         return curverad
 
     def get_lane_position_x(self):
@@ -99,7 +101,7 @@ class Road:
         # Sobel x
         sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0)
         abs_sobelx = np.absolute(sobelx)
-        scaled_sobel = np.uint8(255*abs_sobelx/np.max(abs_sobelx))
+        scaled_sobel = np.uint8(255 * abs_sobelx / np.max(abs_sobelx))
 
         thresh_sobel = (20, 100)
         sobel_binary = np.zeros_like(scaled_sobel)
